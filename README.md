@@ -1,4 +1,6 @@
 # Maze Game
+#### Video Demo:  https://youtu.be/IyOQWDACpAw
+#### Description:
 
 This is a simple maze game implemented in Python using the curses library. The objective of the game is to navigate through a randomly generated maze from the start ('S') to the end ('E') while avoiding obstacles ('#'). The player can use the arrow keys to move, and the game ends when the player reaches the end of the maze.
 
