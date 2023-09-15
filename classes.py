@@ -132,19 +132,19 @@ class Player:
         Raises:
             InvalidMoveError: If the move is invalid, an exception is raised.
         """
-        new_position = self._position.copy()  # Create a copy of the current position
+        new_position = self._position.copy()
 
         if direction == Direction.UP:
-            new_position[0] -= 1  # Move up
+            new_position[0] -= 1
         elif direction == Direction.DOWN:
-            new_position[0] += 1  # Move down
+            new_position[0] += 1
         elif direction == Direction.LEFT:
-            new_position[1] -= 1  # Move left
+            new_position[1] -= 1
         elif direction == Direction.RIGHT:
-            new_position[1] += 1  # Move right
+            new_position[1] += 1
 
         if self._is_valid_move(new_position, maze):
-            self._position = new_position  # Update the position if it's valid
+            self._position = new_position
         else:
             raise InvalidMoveError("You can't move there! Press any key to continue.")
 

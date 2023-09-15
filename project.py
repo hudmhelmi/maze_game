@@ -16,7 +16,6 @@ def main(stdscr):
     # Initialize curses and set up the game environment
     stdscr = curses.initscr()
     curses.noecho()
-    curses.cbreak()
     stdscr.keypad(True)
     maze = Maze()
     player = Player()
@@ -35,17 +34,7 @@ def main(stdscr):
             key = stdscr.getkey()
 
             if allow_movement:
-                # Handle player movement and quitting
-                if key == "KEY_UP":
-                    player.move(Direction.UP, maze)
-                elif key == "KEY_DOWN":
-                    player.move(Direction.DOWN, maze)
-                elif key == "KEY_LEFT":
-                    player.move(Direction.LEFT, maze)
-                elif key == "KEY_RIGHT":
-                    player.move(Direction.RIGHT, maze)
-                elif key == "q":
-                    quit(stdscr)
+                player_input(stdscr, player, key, maze)
 
                 if maze.win(player.position):
                     break
@@ -58,14 +47,39 @@ def main(stdscr):
             stdscr.addstr(12, 0, str(e))
             stdscr.getch()
 
-    # Display a win message and close the game
-    for i in range(3, 0, -1):
-        stdscr.clear()
-        stdscr.addstr(0, 0, f"You win! Closing in {i}...")
-        stdscr.refresh()
-        curses.napms(1000)
+    win(stdscr)
 
     reset_terminal(stdscr)
+
+
+def player_input(stdscr, player, key, maze):
+    """
+    Handle player input for movement and quitting the game.
+
+    This function takes the player's input (a key press) and updates the player's
+    position in the maze accordingly. It also provides an option to quit the game
+    by pressing 'q'.
+
+    Args:
+        stdscr (curses.window): The curses window object representing the game screen.
+        player (Player): The player object representing the player's position.
+        key (str): The key press input from the user.
+        maze (Maze): The maze object representing the game environment.
+
+    Returns:
+        None: This function modifies the player's position within the maze.
+    """
+    # Handle player movement and quitting
+    if key == "KEY_UP":
+        return player.move(Direction.UP, maze)
+    elif key == "KEY_DOWN":
+        return player.move(Direction.DOWN, maze)
+    elif key == "KEY_LEFT":
+        return player.move(Direction.LEFT, maze)
+    elif key == "KEY_RIGHT":
+        return player.move(Direction.RIGHT, maze)
+    elif key == "q":
+        quit(stdscr)
 
 
 def reset_terminal(stdscr):
@@ -75,10 +89,26 @@ def reset_terminal(stdscr):
     Args:
         stdscr (curses.window): The curses window object representing the game screen.
     """
-    curses.nocbreak()
     stdscr.keypad(False)
     curses.echo()
     curses.endwin()
+
+
+def win(stdscr):
+    """
+    Display a win message and close the game.
+
+    This function displays a victory message on the curses window and initiates
+    the game's closure by waiting for a few seconds before exiting the application.
+
+    Args:
+        stdscr (curses.window): The curses window object representing the game screen.
+    """
+    for i in range(3, 0, -1):
+        stdscr.clear()
+        stdscr.addstr(0, 0, f"You win! Closing in {i}...")
+        stdscr.refresh()
+        curses.napms(1000)
 
 
 def quit(stdscr):
