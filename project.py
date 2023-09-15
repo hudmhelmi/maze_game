@@ -1,105 +1,266 @@
+# This code uses the copy module from the Python standard library.
+# For more information on the copy module, refer to the Python documentation:
+# https://docs.python.org/3/library/copy.html
+
 # This code uses the curses module from the Python standard library.
 # For more information on curses, refer to the Python documentation:
 # https://docs.python.org/3/howto/curses.html
 
+# This code uses the enum module from the Python standard library.
+# For more information on the enum module, refer to the Python documentation:
+# https://docs.python.org/3/library/enum.html
+
+# This code uses the random module from the Python standard library.
+# For more information on the random module, refer to the Python documentation:
+# https://docs.python.org/3/library/random.html
+
+
 import curses
-from classes import Maze, Player, Direction, InvalidMoveError
+import random
+from enum import Enum
+from copy import deepcopy
+
+
+class Direction(Enum):
+    """Enumeration of directions for movement."""
+
+    UP = "up"
+    DOWN = "down"
+    LEFT = "left"
+    RIGHT = "right"
+
+
+class InvalidMoveError(Exception):
+    """Custom exception class for invalid player moves."""
+
+    def __init__(self, message="You can't move there! Press any key to continue."):
+        super().__init__(message)
+
+
+class Maze:
+    """Represents the maze game environment."""
+
+    MAZE_WIDTH = 10
+    MAZE_HEIGHT = 10
+
+    def __init__(self) -> None:
+        """
+        Initialize the Maze object.
+
+        This constructor initializes the Maze object with the default maze dimensions.
+        """
+        self.width = self.MAZE_WIDTH
+        self.height = self.MAZE_HEIGHT
+        self.state = self.generate(self.width, self.height)
+
+    def generate(self, width, height):
+        """
+        Generate a random maze with a start (S) and end (E) point.
+
+        Args:
+            width (int): The width of the maze.
+            height (int): The height of the maze.
+
+        Returns:
+            list: A 2D list representing the maze.
+        """
+        maze = [["#" for _ in range(width)] for _ in range(height)]
+        maze[0][0] = "S"
+
+        position = [0, 0]
+        while position != [height - 1, width - 1]:
+            if position[0] == height - 1:
+                direction = Direction.RIGHT
+            elif position[1] == width - 1:
+                direction = Direction.DOWN
+            else:
+                direction = random.choice([Direction.RIGHT, Direction.DOWN])
+            if direction == Direction.RIGHT:
+                maze[position[0]][position[1] + 1] = " "
+                position[1] += 1
+            elif direction == Direction.DOWN:
+                maze[position[0] + 1][position[1]] = " "
+                position[0] += 1
+
+        maze[height - 1][width - 1] = "E"
+
+        return maze
+
+
+class Player:
+    """Represents the player in the maze game."""
+
+    def __init__(self) -> None:
+        """
+        Initialize the Player object with the starting position.
+
+        This constructor initializes the Player object with the default starting position.
+        """
+        self.position = [0, 0]
 
 
 def main(stdscr):
-    """
-    Main function for running the maze game.
-
-    Args:
-        stdscr (curses.window): The curses window object representing the game screen.
-    """
-    # Initialize curses and set up the game environment
-    stdscr = curses.initscr()
-    curses.noecho()
-    stdscr.keypad(True)
-    maze = Maze()
-    player = Player()
-    allow_movement = True
+    stdscr, maze, player = game_setup()
 
     while True:
         try:
-            # Clear the screen and display maze state
             stdscr.clear()
-            stdscr.addstr(0, 0, maze.state(player.position))
+            stdscr.addstr(0, 0, state(maze.state, player.position))
             stdscr.addstr(12, 0, "Use the arrow keys to move. Press q to quit.")
             stdscr.refresh()
 
-            allow_movement = True
-
             key = stdscr.getkey()
 
-            if allow_movement:
-                player_input(stdscr, player, key, maze)
+            player_input(stdscr, player, key, maze)
 
-                if maze.win(player.position):
-                    break
+            if check_win(maze, player.position):
+                break
 
         except InvalidMoveError as e:
-            # Handle invalid moves and display error message
-            allow_movement = False
             stdscr.clear()
-            stdscr.addstr(0, 0, maze.state(player.position))
+            stdscr.addstr(0, 0, state(maze.state, player.position))
             stdscr.addstr(12, 0, str(e))
             stdscr.getch()
 
-    win(stdscr)
+    win_screen(stdscr)
 
-    reset_terminal(stdscr)
+    quit(stdscr)
+
+
+def check_win(maze, position):
+    """
+    Check if the player has reached the end of the maze.
+
+    Args:
+        maze (Maze): The Maze object representing the game maze.
+        position (list): The player's position [row, col].
+
+    Returns:
+        bool: True if the player has won (reached the end), False otherwise.
+    """
+    return position == [maze.height - 1, maze.width - 1]
+
+
+def game_setup():
+    """
+    Set up the game environment and return the curses window, maze, and player objects.
+
+    Returns:
+        tuple: A tuple containing the curses window (stdscr), maze, and player objects.
+    """
+    stdscr = curses.initscr()
+    curses.noecho()
+    curses.cbreak()
+    stdscr.keypad(True)
+    maze = Maze()
+    player = Player()
+    return stdscr, maze, player
+
+
+def is_valid_move(new_position, maze):
+    """
+    Check if a move to the new position is valid within the maze.
+
+    Args:
+        new_position (list): The new position [row, col].
+        maze (Maze): The Maze object representing the game maze.
+
+    Returns:
+        bool: True if the move is valid, False otherwise.
+    """
+    row, col = new_position
+    return (
+        0 <= row < maze.height and 0 <= col < maze.width and maze.state[row][col] != "#"
+    )
+
+
+def move(player, direction, maze):
+    """
+    Move the player in a specified direction within the maze.
+
+    Args:
+        player (Player): The Player object representing the player's position.
+        direction (Direction): The direction to move.
+        maze (Maze): The Maze object representing the game maze.
+
+    Raises:
+        InvalidMoveError: If the move is invalid, an exception is raised.
+    """
+    new_position = player.position.copy()
+
+    if direction == Direction.UP:
+        new_position[0] -= 1
+    elif direction == Direction.DOWN:
+        new_position[0] += 1
+    elif direction == Direction.LEFT:
+        new_position[1] -= 1
+    elif direction == Direction.RIGHT:
+        new_position[1] += 1
+
+    if is_valid_move(new_position, maze):
+        player.position = new_position
+    else:
+        raise InvalidMoveError
 
 
 def player_input(stdscr, player, key, maze):
     """
     Handle player input for movement and quitting the game.
 
-    This function takes the player's input (a key press) and updates the player's
-    position in the maze accordingly. It also provides an option to quit the game
-    by pressing 'q'.
-
     Args:
         stdscr (curses.window): The curses window object representing the game screen.
-        player (Player): The player object representing the player's position.
+        player (Player): The Player object representing the player's position.
         key (str): The key press input from the user.
-        maze (Maze): The maze object representing the game environment.
+        maze (Maze): The Maze object representing the game maze.
 
     Returns:
         None: This function modifies the player's position within the maze.
     """
-    # Handle player movement and quitting
     if key == "KEY_UP":
-        return player.move(Direction.UP, maze)
+        return move(player, Direction.UP, maze)
     elif key == "KEY_DOWN":
-        return player.move(Direction.DOWN, maze)
+        return move(player, Direction.DOWN, maze)
     elif key == "KEY_LEFT":
-        return player.move(Direction.LEFT, maze)
+        return move(player, Direction.LEFT, maze)
     elif key == "KEY_RIGHT":
-        return player.move(Direction.RIGHT, maze)
+        return move(player, Direction.RIGHT, maze)
     elif key == "q":
         quit(stdscr)
 
 
-def reset_terminal(stdscr):
+def quit(stdscr):
     """
-    Reset the terminal settings and exit curses mode.
+    Quit the game and reset terminal settings.
 
     Args:
         stdscr (curses.window): The curses window object representing the game screen.
     """
+    curses.nocbreak()
     stdscr.keypad(False)
     curses.echo()
     curses.endwin()
+    exit()
 
 
-def win(stdscr):
+def state(maze, position):
+    """
+    Get the current state of the maze with the player's position.
+
+    Args:
+        maze (Maze): The Maze object representing the game maze.
+        position (list): The player's position [row, col].
+
+    Returns:
+        str: A string representation of the maze with the player's position marked as 'P'.
+    """
+    maze_copy = deepcopy(maze)
+    maze_copy[position[0]][position[1]] = "P"
+    return "\n".join([" ".join(row) for row in maze_copy])
+
+
+def win_screen(stdscr):
     """
     Display a win message and close the game.
-
-    This function displays a victory message on the curses window and initiates
-    the game's closure by waiting for a few seconds before exiting the application.
 
     Args:
         stdscr (curses.window): The curses window object representing the game screen.
@@ -111,17 +272,5 @@ def win(stdscr):
         curses.napms(1000)
 
 
-def quit(stdscr):
-    """
-    Quit the game and reset terminal settings.
-
-    Args:
-        stdscr (curses.window): The curses window object representing the game screen.
-    """
-    reset_terminal(stdscr)
-    exit()
-
-
 if __name__ == "__main__":
-    # Wrap the main function in curses to handle initialization and cleanup
     curses.wrapper(main)
