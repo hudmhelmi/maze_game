@@ -15,7 +15,7 @@ Before running the game, ensure that you have Python installed on your system. Y
 3. Run the game using the following command:
 
    ```bash
-   python maze_game.py
+   python project.py
    ```
 
 4. The game screen will appear, displaying the maze with the player's position marked as 'P'. You'll start at the 'S' (start) position.
@@ -32,7 +32,7 @@ Before running the game, ensure that you have Python installed on your system. Y
 
 The code consists of the following components:
 
-- `maze_game.py`: The main Python script containing the game logic.
+- `project.py`: The main Python script containing the game logic.
 
 - `Direction`: An enumeration of directions for movement.
 
