@@ -48,6 +48,6 @@ The code consists of the following components:
 
 ## Acknowledgments
 
-This maze game is a simple implementation designed for CSS50P 2022's Final Project. It utilizes Python's curses library for handling terminal-based user interfaces. The game's core logic involves maze generation and navigation, providing an opportunity to explore concepts like data structures, game design, and user input handling.
+This maze game is a simple implementation designed for CS50P 2022's Final Project. It utilizes Python's curses library for handling terminal-based user interfaces. The game's core logic involves maze generation and navigation, providing an opportunity to explore concepts like data structures, game design, and user input handling.
 
 Feel free to modify and expand upon this code to create more complex maze games or add additional features and challenges.
